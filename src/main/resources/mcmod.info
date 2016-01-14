@@ -1,0 +1,16 @@
+[
+{
+  "modid": "underphangables",
+  "name": "Underp Hangables",
+  "description": "Underps Item Frames, Paintings and other hangable entities when dropping them",
+  "version": "${mod_version}",
+  "mcversion": "${minecraft_version}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["masa"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
