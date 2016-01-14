@@ -9,15 +9,16 @@ import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.item.EntityPainting;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToAccessFieldException;
-import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToFindMethodException;
+
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.relauncher.ReflectionHelper;
+import cpw.mods.fml.relauncher.ReflectionHelper.UnableToAccessFieldException;
+import cpw.mods.fml.relauncher.ReflectionHelper.UnableToFindMethodException;
 
 public class AttackEntityEventHandler
 {
@@ -25,7 +26,7 @@ public class AttackEntityEventHandler
     public void onAttackEntityEvent(AttackEntityEvent event)
     {
         if (event.entityPlayer.capabilities.isCreativeMode == true ||
-            event.target.isEntityInvulnerable(DamageSource.causePlayerDamage(event.entityPlayer)) == true)
+            event.target.isEntityInvulnerable() == true)
         {
             return;
         }
@@ -39,20 +40,12 @@ public class AttackEntityEventHandler
             {
                 if (stack != null)
                 {
-                    if (event.target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
-                    {
-                        dropDisplayItemFromItemFrame(entityItemFrame, stack, getEntityYawFacing(event.target));
-                    }
-
+                    dropDisplayItemFromItemFrame(entityItemFrame, stack, getEntityYawFacing(event.target));
                     entityItemFrame.setDisplayedItem(null);
                 }
                 else
                 {
-                    if (event.target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
-                    {
-                        dropItemWithAdjustedPosition(new ItemStack(Items.item_frame), entityItemFrame, getEntityYawFacing(event.target));
-                    }
-
+                    dropItemWithAdjustedPosition(new ItemStack(Items.item_frame), entityItemFrame, getEntityYawFacing(event.target));
                     entityItemFrame.setDead();
                 }
             }
@@ -63,10 +56,7 @@ public class AttackEntityEventHandler
         {
             if (event.target.worldObj.isRemote == false)
             {
-                if (event.target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
-                {
-                    dropItemWithAdjustedPosition(new ItemStack(Items.painting), event.target, getEntityYawFacing(event.target));
-                }
+                dropItemWithAdjustedPosition(new ItemStack(Items.painting), event.target, getEntityYawFacing(event.target));
 
                 event.target.setDead();
             }
@@ -75,9 +65,20 @@ public class AttackEntityEventHandler
         }
     }
 
-    public static EnumFacing getEntityYawFacing(Entity entity)
+    public static ForgeDirection getEntityYawFacing(Entity entity)
     {
-        return EnumFacing.fromAngle(entity.rotationYaw);
+        byte yawToDir[] = {2, 5, 3, 4};
+        int yaw = MathHelper.floor_double((double)(entity.rotationYaw * 4.0f / 360.0f) + 0.5d) & 3;
+
+        ForgeDirection facing = ForgeDirection.getOrientation(yawToDir[yaw]);
+
+        if (facing == ForgeDirection.EAST || facing == ForgeDirection.WEST)
+        {
+            // Because wtf @ EntityHanging#setDirection()
+            facing = facing.getOpposite();
+        }
+
+        return facing;
     }
 
     public static EntityItem createEntityItemWithoutHorizontalMotion(ItemStack stack, World world, double x, double y, double z, double motionY)
@@ -87,15 +88,15 @@ public class AttackEntityEventHandler
         entityItem.motionY = motionY;
         entityItem.motionZ = 0.0d;
 
-        entityItem.setDefaultPickupDelay();
+        entityItem.delayBeforeCanPickup = 10;
 
         return entityItem;
     }
 
-    public static void dropItemWithAdjustedPosition(ItemStack stack, Entity entity, EnumFacing facingToAdjustTo)
+    public static void dropItemWithAdjustedPosition(ItemStack stack, Entity entity, ForgeDirection facingToAdjustTo)
     {
-        double posX = entity.posX + facingToAdjustTo.getFrontOffsetX() * 0.15f;
-        double posZ = entity.posZ + facingToAdjustTo.getFrontOffsetZ() * 0.15f;
+        double posX = entity.posX + facingToAdjustTo.offsetX * 0.15f;
+        double posZ = entity.posZ + facingToAdjustTo.offsetZ * 0.15f;
         EntityItem entityItem = createEntityItemWithoutHorizontalMotion(stack, entity.worldObj, posX, entity.posY, posZ, 0.1d);
 
         //System.out.println("adjusting towards " + facingToAdjustTo);
@@ -111,7 +112,7 @@ public class AttackEntityEventHandler
         }
     }
 
-    public static void dropDisplayItemFromItemFrame(EntityItemFrame entityItemFrame, ItemStack stack, EnumFacing facing)
+    public static void dropDisplayItemFromItemFrame(EntityItemFrame entityItemFrame, ItemStack stack, ForgeDirection facing)
     {
         float dropChance = 1.0f;
 
