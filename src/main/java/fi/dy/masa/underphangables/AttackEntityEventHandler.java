@@ -4,13 +4,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.item.EntityPainting;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 
@@ -25,67 +24,60 @@ public class AttackEntityEventHandler
     @SubscribeEvent
     public void onAttackEntityEvent(AttackEntityEvent event)
     {
-        if (event.entityPlayer.capabilities.isCreativeMode)
+        if (event.entityPlayer.capabilities.isCreativeMode == true ||
+            event.target.isEntityInvulnerable(DamageSource.causePlayerDamage(event.entityPlayer)) == true)
         {
             return;
         }
 
-        if (event.target instanceof EntityHanging)
+        if (event.target instanceof EntityItemFrame)
         {
-            EnumFacing facing = getEntityYawFacing(event.target);
+            EntityItemFrame entityItemFrame = (EntityItemFrame)event.target;
+            ItemStack stack = entityItemFrame.getDisplayedItem();
 
-            if (event.target instanceof EntityItemFrame)
+            if (event.target.worldObj.isRemote == false)
             {
-                EntityItemFrame entityItemFrame = (EntityItemFrame)event.target;
-                ItemStack stack = entityItemFrame.getDisplayedItem();
-
-                if (event.target.worldObj.isRemote == false)
+                if (stack != null)
                 {
-                    if (stack != null)
+                    if (event.target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
                     {
-                        dropDisplayItemFromItemFrame(entityItemFrame, stack, facing, event.entityPlayer);
-                        entityItemFrame.setDisplayedItem(null);
+                        dropDisplayItemFromItemFrame(entityItemFrame, stack, getEntityYawFacing(event.target));
                     }
-                    else
+
+                    entityItemFrame.setDisplayedItem(null);
+                }
+                else
+                {
+                    if (event.target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
                     {
-                        dropItemWithAdjustedPosition(new ItemStack(Items.item_frame), entityItemFrame, facing);
-                        entityItemFrame.setDead();
+                        dropItemWithAdjustedPosition(new ItemStack(Items.item_frame), entityItemFrame, getEntityYawFacing(event.target));
                     }
+
+                    entityItemFrame.setDead();
+                }
+            }
+
+            event.setCanceled(true);
+        }
+        else if (event.target instanceof EntityPainting)
+        {
+            if (event.target.worldObj.isRemote == false)
+            {
+                if (event.target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
+                {
+                    dropItemWithAdjustedPosition(new ItemStack(Items.painting), event.target, getEntityYawFacing(event.target));
                 }
 
-                event.setCanceled(true);
+                event.target.setDead();
             }
-            else if (event.target instanceof EntityPainting)
-            {
-                if (event.target.worldObj.isRemote == false)
-                {
-                    dropItemWithAdjustedPosition(new ItemStack(Items.painting), event.target, facing);
-                    event.target.setDead();
-                }
 
-                event.setCanceled(true);
-            }
-            else
-            {
-                unCollideEntityOnFacingAxis(event.target, facing);
-            }
+            event.setCanceled(true);
         }
     }
 
     public static EnumFacing getEntityYawFacing(Entity entity)
     {
         return EnumFacing.fromAngle(entity.rotationYaw);
-    }
-
-    public static void unCollideEntityOnFacingAxis(Entity entity, EnumFacing facing)
-    {
-        //System.out.println("adjusting towards " + facing);
-        //System.out.println(String.format("pre  x: %.2f y: %.2f z: %.2f", entity.posX, entity.posY, entity.posZ));
-
-        entity.posX += facing.getFrontOffsetX() * (0.0625f + entity.width / 2.0f);
-        entity.posZ += facing.getFrontOffsetZ() * (0.0625f + entity.width / 2.0f);
-
-        //System.out.println(String.format("post x: %.2f y: %.2f z: %.2f", entity.posX, entity.posY, entity.posZ));
     }
 
     public static EntityItem createEntityItemWithoutHorizontalMotion(ItemStack stack, World world, double x, double y, double z, double motionY)
@@ -119,7 +111,7 @@ public class AttackEntityEventHandler
         }
     }
 
-    public static void dropDisplayItemFromItemFrame(EntityItemFrame entityItemFrame, ItemStack stack, EnumFacing facing, EntityPlayer player)
+    public static void dropDisplayItemFromItemFrame(EntityItemFrame entityItemFrame, ItemStack stack, EnumFacing facing)
     {
         float dropChance = 1.0f;
 
@@ -132,7 +124,7 @@ public class AttackEntityEventHandler
             UnderpHangables.logger.warn("UnableToAccessFieldException while trying to get EntityItemFrame#itemDropChance");
         }
 
-        if (stack != null && stack.stackSize > 0 && stack.getItem() != null && player.worldObj.rand.nextFloat() < dropChance)
+        if (stack != null && stack.stackSize > 0 && stack.getItem() != null && entityItemFrame.worldObj.rand.nextFloat() < dropChance)
         {
             stack = stack.copy();
             try
