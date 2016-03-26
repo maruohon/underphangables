@@ -2,17 +2,17 @@ package fi.dy.masa.underphangables;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.item.EntityPainting;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
-
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -24,51 +24,56 @@ public class AttackEntityEventHandler
     @SubscribeEvent
     public void onAttackEntityEvent(AttackEntityEvent event)
     {
-        if (event.entityPlayer.capabilities.isCreativeMode == true ||
-            event.target.isEntityInvulnerable(DamageSource.causePlayerDamage(event.entityPlayer)) == true)
+        EntityPlayer player = event.getEntityPlayer();
+        Entity target = event.getTarget();
+
+        if (player.capabilities.isCreativeMode == true || target.isEntityInvulnerable(DamageSource.causePlayerDamage(player)) == true)
         {
             return;
         }
 
-        if (event.target instanceof EntityItemFrame)
+        if (target instanceof EntityItemFrame)
         {
-            EntityItemFrame entityItemFrame = (EntityItemFrame)event.target;
+            EntityItemFrame entityItemFrame = (EntityItemFrame)target;
             ItemStack stack = entityItemFrame.getDisplayedItem();
 
-            if (event.target.worldObj.isRemote == false)
+            if (target.worldObj.isRemote == false)
             {
                 if (stack != null)
                 {
-                    if (event.target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
+                    if (target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
                     {
-                        dropDisplayItemFromItemFrame(entityItemFrame, stack, getEntityYawFacing(event.target));
+                        dropDisplayItemFromItemFrame(entityItemFrame, stack, getEntityYawFacing(target));
                     }
 
+                    entityItemFrame.playSound(SoundEvents.entity_itemframe_remove_item, 1.0F, 1.0F);
                     entityItemFrame.setDisplayedItem(null);
                 }
                 else
                 {
-                    if (event.target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
+                    if (target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
                     {
-                        dropItemWithAdjustedPosition(new ItemStack(Items.item_frame), entityItemFrame, getEntityYawFacing(event.target));
+                        dropItemWithAdjustedPosition(new ItemStack(Items.item_frame), entityItemFrame, getEntityYawFacing(target));
                     }
 
+                    entityItemFrame.playSound(SoundEvents.entity_itemframe_break, 1.0F, 1.0F);
                     entityItemFrame.setDead();
                 }
             }
 
             event.setCanceled(true);
         }
-        else if (event.target instanceof EntityPainting)
+        else if (target instanceof EntityPainting)
         {
-            if (event.target.worldObj.isRemote == false)
+            if (target.worldObj.isRemote == false)
             {
-                if (event.target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
+                if (target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
                 {
-                    dropItemWithAdjustedPosition(new ItemStack(Items.painting), event.target, getEntityYawFacing(event.target));
+                    dropItemWithAdjustedPosition(new ItemStack(Items.painting), target, getEntityYawFacing(target));
                 }
 
-                event.target.setDead();
+                target.playSound(SoundEvents.entity_painting_break, 1.0F, 1.0F);
+                target.setDead();
             }
 
             event.setCanceled(true);
