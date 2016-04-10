@@ -2,6 +2,7 @@ package fi.dy.masa.underphangables;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityItemFrame;
@@ -13,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
+
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -46,17 +48,17 @@ public class AttackEntityEventHandler
                         dropDisplayItemFromItemFrame(entityItemFrame, stack, getEntityYawFacing(target));
                     }
 
-                    entityItemFrame.playSound(SoundEvents.entity_itemframe_remove_item, 1.0F, 1.0F);
+                    entityItemFrame.playSound(SoundEvents.ENTITY_ITEMFRAME_REMOVE_ITEM, 1.0F, 1.0F);
                     entityItemFrame.setDisplayedItem(null);
                 }
                 else
                 {
                     if (target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
                     {
-                        dropItemWithAdjustedPosition(new ItemStack(Items.item_frame), entityItemFrame, getEntityYawFacing(target));
+                        dropItemWithAdjustedPosition(new ItemStack(Items.ITEM_FRAME), entityItemFrame, getEntityYawFacing(target));
                     }
 
-                    entityItemFrame.playSound(SoundEvents.entity_itemframe_break, 1.0F, 1.0F);
+                    entityItemFrame.playSound(SoundEvents.ENTITY_ITEMFRAME_BREAK, 1.0F, 1.0F);
                     entityItemFrame.setDead();
                 }
             }
@@ -69,10 +71,10 @@ public class AttackEntityEventHandler
             {
                 if (target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
                 {
-                    dropItemWithAdjustedPosition(new ItemStack(Items.painting), target, getEntityYawFacing(target));
+                    dropItemWithAdjustedPosition(new ItemStack(Items.PAINTING), target, getEntityYawFacing(target));
                 }
 
-                target.playSound(SoundEvents.entity_painting_break, 1.0F, 1.0F);
+                target.playSound(SoundEvents.ENTITY_ITEMFRAME_BREAK, 1.0F, 1.0F);
                 target.setDead();
             }
 
