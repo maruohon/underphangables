@@ -2,7 +2,6 @@ package fi.dy.masa.underphangables;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityItemFrame;
@@ -14,7 +13,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
-
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -29,7 +27,7 @@ public class AttackEntityEventHandler
         EntityPlayer player = event.getEntityPlayer();
         Entity target = event.getTarget();
 
-        if (player.capabilities.isCreativeMode == true || target.isEntityInvulnerable(DamageSource.causePlayerDamage(player)) == true)
+        if (player.capabilities.isCreativeMode || target.isEntityInvulnerable(DamageSource.causePlayerDamage(player)))
         {
             return;
         }
@@ -39,21 +37,21 @@ public class AttackEntityEventHandler
             EntityItemFrame entityItemFrame = (EntityItemFrame)target;
             ItemStack stack = entityItemFrame.getDisplayedItem();
 
-            if (target.worldObj.isRemote == false)
+            if (target.getEntityWorld().isRemote == false)
             {
-                if (stack != null)
+                if (stack.func_190926_b() == false)
                 {
-                    if (target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
+                    if (target.getEntityWorld().getGameRules().getBoolean("doEntityDrops") == true)
                     {
                         dropDisplayItemFromItemFrame(entityItemFrame, stack, getEntityYawFacing(target));
                     }
 
                     entityItemFrame.playSound(SoundEvents.ENTITY_ITEMFRAME_REMOVE_ITEM, 1.0F, 1.0F);
-                    entityItemFrame.setDisplayedItem(null);
+                    entityItemFrame.setDisplayedItem(ItemStack.field_190927_a);
                 }
                 else
                 {
-                    if (target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
+                    if (target.getEntityWorld().getGameRules().getBoolean("doEntityDrops") == true)
                     {
                         dropItemWithAdjustedPosition(new ItemStack(Items.ITEM_FRAME), entityItemFrame, getEntityYawFacing(target));
                     }
@@ -67,9 +65,9 @@ public class AttackEntityEventHandler
         }
         else if (target instanceof EntityPainting)
         {
-            if (target.worldObj.isRemote == false)
+            if (target.getEntityWorld().isRemote == false)
             {
-                if (target.worldObj.getGameRules().getBoolean("doEntityDrops") == true)
+                if (target.getEntityWorld().getGameRules().getBoolean("doEntityDrops") == true)
                 {
                     dropItemWithAdjustedPosition(new ItemStack(Items.PAINTING), target, getEntityYawFacing(target));
                 }
@@ -103,7 +101,7 @@ public class AttackEntityEventHandler
     {
         double posX = entity.posX + facingToAdjustTo.getFrontOffsetX() * 0.15f;
         double posZ = entity.posZ + facingToAdjustTo.getFrontOffsetZ() * 0.15f;
-        EntityItem entityItem = createEntityItemWithoutHorizontalMotion(stack, entity.worldObj, posX, entity.posY, posZ, 0.1d);
+        EntityItem entityItem = createEntityItemWithoutHorizontalMotion(stack, entity.getEntityWorld(), posX, entity.posY, posZ, 0.1d);
 
         //System.out.println("adjusting towards " + facingToAdjustTo);
         //System.out.println(String.format("post x: %.2f y: %.2f z: %.2f", entityItem.posX, entityItem.posY, entityItem.posZ));
@@ -114,7 +112,7 @@ public class AttackEntityEventHandler
         }
         else
         {
-            entity.worldObj.spawnEntityInWorld(entityItem);
+            entity.getEntityWorld().spawnEntityInWorld(entityItem);
         }
     }
 
@@ -131,9 +129,10 @@ public class AttackEntityEventHandler
             UnderpHangables.logger.warn("UnableToAccessFieldException while trying to get EntityItemFrame#itemDropChance");
         }
 
-        if (stack != null && stack.stackSize > 0 && stack.getItem() != null && entityItemFrame.worldObj.rand.nextFloat() < dropChance)
+        if (stack.func_190926_b() == false && entityItemFrame.getEntityWorld().rand.nextFloat() < dropChance)
         {
             stack = stack.copy();
+
             try
             {
                 Method method = ReflectionHelper.findMethod(EntityItemFrame.class, entityItemFrame, new String[] {"func_110131_b", "removeFrameFromMap"}, ItemStack.class);
