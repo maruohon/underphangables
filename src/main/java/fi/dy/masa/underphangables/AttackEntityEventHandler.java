@@ -39,7 +39,7 @@ public class AttackEntityEventHandler
 
             if (target.getEntityWorld().isRemote == false)
             {
-                if (stack.func_190926_b() == false)
+                if (stack.isEmpty() == false)
                 {
                     if (target.getEntityWorld().getGameRules().getBoolean("doEntityDrops") == true)
                     {
@@ -47,7 +47,7 @@ public class AttackEntityEventHandler
                     }
 
                     entityItemFrame.playSound(SoundEvents.ENTITY_ITEMFRAME_REMOVE_ITEM, 1.0F, 1.0F);
-                    entityItemFrame.setDisplayedItem(ItemStack.field_190927_a);
+                    entityItemFrame.setDisplayedItem(ItemStack.EMPTY);
                 }
                 else
                 {
@@ -112,7 +112,7 @@ public class AttackEntityEventHandler
         }
         else
         {
-            entity.getEntityWorld().spawnEntityInWorld(entityItem);
+            entity.getEntityWorld().spawnEntity(entityItem);
         }
     }
 
@@ -129,7 +129,7 @@ public class AttackEntityEventHandler
             UnderpHangables.logger.warn("UnableToAccessFieldException while trying to get EntityItemFrame#itemDropChance");
         }
 
-        if (stack.func_190926_b() == false && entityItemFrame.getEntityWorld().rand.nextFloat() < dropChance)
+        if (stack.isEmpty() == false && entityItemFrame.getEntityWorld().rand.nextFloat() < dropChance)
         {
             stack = stack.copy();
 
