@@ -135,7 +135,7 @@ public class AttackEntityEventHandler
 
             try
             {
-                Method method = ReflectionHelper.findMethod(EntityItemFrame.class, entityItemFrame, new String[] {"func_110131_b", "removeFrameFromMap"}, ItemStack.class);
+                Method method = ReflectionHelper.findMethod(EntityItemFrame.class, "removeFrameFromMap", "func_110131_b", ItemStack.class);
                 method.invoke(entityItemFrame, stack);
             }
             catch (UnableToFindMethodException e)

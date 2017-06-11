@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
-    acceptableRemoteVersions="*", acceptedMinecraftVersions = "[1.11,1.11.2]")
+    acceptableRemoteVersions="*", acceptedMinecraftVersions = "1.12")
 public class UnderpHangables
 {
     @Mod.Instance(Reference.MOD_ID)
