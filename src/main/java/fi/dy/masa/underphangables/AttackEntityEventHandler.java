@@ -99,8 +99,8 @@ public class AttackEntityEventHandler
 
     public static void dropItemWithAdjustedPosition(ItemStack stack, Entity entity, EnumFacing facingToAdjustTo)
     {
-        double posX = entity.posX + facingToAdjustTo.getFrontOffsetX() * 0.15f;
-        double posZ = entity.posZ + facingToAdjustTo.getFrontOffsetZ() * 0.15f;
+        double posX = entity.posX + facingToAdjustTo.getXOffset() * 0.15f;
+        double posZ = entity.posZ + facingToAdjustTo.getZOffset() * 0.15f;
         EntityItem entityItem = createEntityItemWithoutHorizontalMotion(stack, entity.getEntityWorld(), posX, entity.posY, posZ, 0.1d);
 
         //System.out.println("adjusting towards " + facingToAdjustTo);
